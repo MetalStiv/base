@@ -3,10 +3,11 @@ import { Button, Col, Form, Row } from "react-bootstrap";
 
 import style from './style.module.css';
 import { registerFormScheme } from "../../../constants/form-validations-schemes";
-import { userCleanMicroservice } from "../../../constants/axios-microservices";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRegisterMutation } from "../../../store/slices/user-api";
 
 export const RegisterForm = () => {
+    const [registerUser, {isSuccess, isError, error}] = useRegisterMutation();
     const [isRegistrationEmailError, setIsRegistrationEmailError] = useState(false);
     const [isRegistrationCompleted, setIsRegistrationComplited] = useState(false);
 
@@ -19,19 +20,26 @@ export const RegisterForm = () => {
         onSubmit: async (values) => {
             setIsRegistrationEmailError(false);
             setIsRegistrationComplited(false);
-            let res = await userCleanMicroservice.post('register', {
-                email: values.email,
-                password: values.password
-            });
-            if (res.status === 520){
-                setIsRegistrationEmailError(true)
-            }
-            if (res.status === 200){
-                setIsRegistrationComplited(true)
-            }
+            await registerUser(values);
         },
         validationSchema: registerFormScheme 
     });
+
+    useEffect(() => {
+        if (isError && error) {
+            if (('status' in error ) && error!.status === 520){
+                setIsRegistrationEmailError(true);
+                setIsRegistrationComplited(false);
+            }
+        }
+    }, [isError, error]);
+
+    useEffect(() => {
+        if (isSuccess){
+            setIsRegistrationEmailError(false);
+            setIsRegistrationComplited(true);
+        }
+    }, [isSuccess]);
 
     return (
         <Form noValidate onSubmit={form.submitForm}>

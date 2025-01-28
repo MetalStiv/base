@@ -20,25 +20,22 @@ router.get('/getTransactions', async (req: RequestWithDecodedToken, res: ITypedR
         })));
 });
 
-router.post('/addTransaction', async (req: ITypedRequestBodyWithDecodedToken<ITransactionDto>, res: Response) => {
-    const newTransaction: ITransaction = {
-        _id: new ObjectId(),
-        input: req.body.input,
-        dateTime: req.body.dateTime,
-        amount: req.body.amount,
-        comment: req.body.comment,
-        userId: new ObjectId(req.user.id),
-    }
-
-    await transactionCollection.insertOne(newTransaction);
-    res.status(200).send();
-});
-
-router.post('/updateTransaction', async (req: ITypedRequestBodyWithDecodedToken<ITransactionDto>, res: Response) => {
-    console.log(req.body)
+router.post('/postTransaction', async (req: ITypedRequestBodyWithDecodedToken<ITransactionDto>, res: Response) => {
     const transactionToUpdate = await transactionCollection.findOne({'_id': new ObjectId(req.body._id)});
     if (!transactionToUpdate || transactionToUpdate.userId.toString() !== req.user.id){
-        res.status(510).send();
+        const newTransaction: ITransaction = {
+            _id: new ObjectId(),
+            input: req.body.input,
+            dateTime: req.body.dateTime,
+            amount: req.body.amount,
+            comment: req.body.comment,
+            userId: new ObjectId(req.user.id),
+        }
+    
+        await transactionCollection.insertOne(newTransaction);
+        res.status(200).send();
+
+        return;
     }
 
     await transactionCollection.findOneAndUpdate({'_id': new ObjectId(req.body._id)}, {

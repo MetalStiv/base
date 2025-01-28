@@ -1,45 +1,40 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Col, Form, Modal, Row } from "react-bootstrap";
 import { ITransactionDto } from "../../../../shared/types/dto/transaction-dto";
 import { useFormik } from "formik";
 import { updateTransactionFormScheme } from "../../constants/form-validations-schemes";
 import style from './styles.module.css';
-import { transactionMicroservice } from "../../constants/axios-microservices";
+import { usePostTransactionMutation } from "../../store/slices/transactions-api";
 
 export interface IUpdateTransactionFormProps {
     transactionDto?: ITransactionDto;
-    updateTransactions: () => void;
 }
 
-export const UpdateTransactionForm = ({transactionDto, updateTransactions}: IUpdateTransactionFormProps) => {
+export const UpdateTransactionForm = ({transactionDto}: IUpdateTransactionFormProps) => {
+    const [postTransaction, {isSuccess}] = usePostTransactionMutation();
     const [show, setShow] = useState(false);
 
     const handleClose = () => setShow(false);
 
     const form = useFormik({
         initialValues: {
+            _id: transactionDto ? transactionDto._id : undefined,
             input: transactionDto ? transactionDto.input : true,
             amount: transactionDto ? transactionDto.amount : 0,
             dateTime: transactionDto ? transactionDto.dateTime : Date.now(),
             comment: transactionDto ? transactionDto.comment : '' 
         },
-        onSubmit: async (values) => {
-            try{
-                if (transactionDto){
-                    await transactionMicroservice.post('updateTransaction', {...values, _id: transactionDto._id});
-                }
-                else {
-                    await transactionMicroservice.post('addTransaction', values);
-                }
-                updateTransactions();
-                setShow(false);
-            }
-            catch(errorCode){
-                console.log(errorCode)
-            }
+        onSubmit: (values) => { 
+            postTransaction(values)
         },
         validationSchema: updateTransactionFormScheme
     });
+
+    useEffect(() => {
+        if (isSuccess){
+            setShow(false);
+        }
+    }, [isSuccess]);
 
     return (
         <>

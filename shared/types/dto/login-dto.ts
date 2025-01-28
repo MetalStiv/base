@@ -1,4 +1,5 @@
 export interface ILoginDto {
     email: string,
-    password: string
+    password: string,
+    confirm?: string
 }

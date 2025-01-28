@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { StartPage } from './pages/start-page/start-page';
 
 import {
@@ -9,18 +8,20 @@ import {
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { TransactionsPage } from './pages/transactions-page/transactions-page';
+import { store } from './store/store';
+import { Provider } from 'react-redux';
 
 function App() {
-  const [isSignedIn, setIsSignedIn] = useState(false);
-
   return (
     <div className="App" style={{ height: '100%' }}>
-      <Router>
-        <Routes>
-          <Route path="/" element={<StartPage setIsSignedIn={setIsSignedIn} />} />
-          <Route path="/home" element={<TransactionsPage isSignedIn={isSignedIn}/>} />
-        </Routes>
-      </Router>
+      <Provider store={store}>
+        <Router>
+          <Routes>
+            <Route path="/" element={<StartPage />} />
+            <Route path="/home" element={<TransactionsPage />} />
+          </Routes>
+        </Router>
+      </Provider>
     </div>
   );
 }

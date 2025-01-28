@@ -1,11 +1,13 @@
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { logout } from "../../helpers/login";
+import { logout } from "../../store/slices/user-slice";
 
 export const Header = () => {
+    const dispatch = useDispatch();
     const navigate = useNavigate();
     
     const signOut = () => {
-        logout();
+        dispatch(logout());
         navigate('/');
     }
 

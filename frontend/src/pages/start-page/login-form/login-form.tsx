@@ -3,43 +3,50 @@ import { Button, Col, Form, Row } from "react-bootstrap";
 
 import style from './style.module.css';
 import { loginFormScheme } from "../../../constants/form-validations-schemes";
-import { login } from "../../../helpers/login";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLoginMutation } from "../../../store/slices/user-api";
 
-export interface ILoginFormProps {
-    setIsSignedIn: (isSignedIn: boolean) => void
-}
-
-export const LoginForm = ({setIsSignedIn}: ILoginFormProps) => {
+export const LoginForm = () => {
+    const [loginUser, {data, isSuccess, isError, error}] = useLoginMutation();
     const navigate = useNavigate();
     const [isInvalidUserError, setIsInvalidUserError] = useState(false);
     const [isPasswordError, setIsPasswordError] = useState(false);
-    
+
     const form = useFormik({
         initialValues: {
             email: '',
             password: ''
           },
-          onSubmit: async (values) => {
+          onSubmit: (values) => {
             setIsInvalidUserError(false);
             setIsPasswordError(false);
-            try{
-                await login(values);
-                setIsSignedIn(true);
-                navigate('/home');
-            }
-            catch(errorCode){
-                if (errorCode === 520){
-                    setIsInvalidUserError(true)
-                }
-                if (errorCode === 521){
-                    setIsPasswordError(true)
-                }
-            }
+            loginUser(values);
         },
         validationSchema: loginFormScheme
     });
+
+    useEffect(() => {
+        if (isSuccess && data){
+            localStorage.setItem('access_token', data.access);
+            localStorage.setItem('refresh_token', data.refresh);
+            navigate('/home');
+            return;
+        }
+    }, [isSuccess]);
+
+    useEffect(() => {
+        if (isError && error) {
+            if (('status' in error ) && error!.status === 520){
+                setIsInvalidUserError(true)
+                setIsPasswordError(false)
+            }
+            if (('status' in error ) && error!.status === 521){
+                setIsInvalidUserError(false)
+                setIsPasswordError(true)
+            }
+        }
+    }, [isError, error]);
 
     return (
         <Form noValidate onSubmit={form.submitForm}>

@@ -1,52 +1,29 @@
-import React, { useEffect, useState } from "react";
-import { useUserId } from "../../hooks/useUserId";
 import { useNavigate } from "react-router-dom";
 import { Card } from "react-bootstrap";
-import { ITransactionDto } from '../../../../shared/types/dto/transaction-dto';
-import { transactionMicroservice } from "../../constants/axios-microservices";
 import { Header } from "./header";
 import { UpdateTransactionForm } from "./update-transasction-form";
 import ConfirmationDialog from "../../components/confirmation-dialog";
-
-export interface ITransactionPageProps {
-    isSignedIn: boolean;
-}
+import { useSelector } from "react-redux";
+import { selectUserId } from "../../store/slices/user-slice";
+import { useDeleteTransactionMutation, useGetTransactionsQuery } from "../../store/slices/transactions-api";
  
-export const TransactionsPage = ({isSignedIn}: ITransactionPageProps) => {
-    // const userId = useUserId();
+export const TransactionsPage = () => {
     const navigate = useNavigate();
+    const userId = useSelector(selectUserId);
+    const [deleteTransaction] = useDeleteTransactionMutation();
 
-    if (!isSignedIn){
-        navigate(-1);
+    const {data: transactionsDto, isFetching} = useGetTransactionsQuery();
+
+    if (isFetching){
+        return <h1>Loading...</h1>;
     }
 
-    const [transactionsDto, setTransactionsDto] = useState<ITransactionDto[]>([]);
-
-    const updateTransactions = () => {
-        async function getTransactions(){
-            const response = await transactionMicroservice.get('getTransactions');
-            if (response.status !== 200){
-                throw response.status;
-            }
-            setTransactionsDto(response.data)
-        }
-        getTransactions(); 
+    if (userId === ''){
+        navigate('/');
     }
 
-    useEffect(() => {
-        updateTransactions();
-    }, []);
-
-    const deleteTransaction: (id: string) => void = (id) => {
-        async function deleteRequest(id: string){
-            await transactionMicroservice.delete('deleteTransaction', {
-                data: {
-                    '_id': id
-                }
-            });
-            updateTransactions();
-        }
-        deleteRequest(id);
+    const handleDeleteTransaction: (id: string) => void = (id) => {
+        deleteTransaction({_id: id})
     }
 
     return (
@@ -54,11 +31,11 @@ export const TransactionsPage = ({isSignedIn}: ITransactionPageProps) => {
             <Header />
 
             <div style={{width: '10vw'}}>
-                <UpdateTransactionForm updateTransactions={updateTransactions} />
+                <UpdateTransactionForm />
             </div>
 
             {
-                transactionsDto.map((transactionDto) => (
+                transactionsDto?.map((transactionDto) => (
                     <Card
                         border={transactionDto.input ? 'success' : 'danger'}
                         text='black'
@@ -76,13 +53,13 @@ export const TransactionsPage = ({isSignedIn}: ITransactionPageProps) => {
                                         {transactionDto.comment}
                                     </div>
                                     <div style={{width: '10%', display: 'flex', gap: 8}}>
-                                        <UpdateTransactionForm transactionDto={transactionDto} updateTransactions={updateTransactions} />
+                                        <UpdateTransactionForm transactionDto={transactionDto} />
                                         <ConfirmationDialog 
                                             showText='Delete'
                                             btnAcceptText='Delete'
                                             btnDeclineText='Cancel'
                                             question='Are you shure you want to delete transaction?'
-                                            action={() => deleteTransaction(transactionDto._id!)}
+                                            action={() => handleDeleteTransaction(transactionDto._id!)}
                                         />
                                     </div>
                                 </div>
