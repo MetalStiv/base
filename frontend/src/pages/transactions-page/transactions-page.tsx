@@ -1,52 +1,27 @@
-import React, { useEffect, useState } from "react";
-import { useUserId } from "../../hooks/useUserId";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "react-bootstrap";
-import { ITransactionDto } from '../../../../shared/types/dto/transaction-dto';
-import { transactionMicroservice } from "../../constants/axios-microservices";
 import { Header } from "./header";
 import { UpdateTransactionForm } from "./update-transasction-form";
 import ConfirmationDialog from "../../components/confirmation-dialog";
-
-export interface ITransactionPageProps {
-    isSignedIn: boolean;
-}
+import { rootStore } from "../../stores/root-store";
+import { observer } from "mobx-react-lite";
  
-export const TransactionsPage = ({isSignedIn}: ITransactionPageProps) => {
-    // const userId = useUserId();
+export const TransactionsPage = observer(() => {
     const navigate = useNavigate();
 
-    if (!isSignedIn){
+    if (!rootStore.userStore.isLogged){
         navigate(-1);
     }
 
-    const [transactionsDto, setTransactionsDto] = useState<ITransactionDto[]>([]);
-
-    const updateTransactions = () => {
-        async function getTransactions(){
-            const response = await transactionMicroservice.get('getTransactions');
-            if (response.status !== 200){
-                throw response.status;
-            }
-            setTransactionsDto(response.data)
-        }
-        getTransactions(); 
-    }
-
     useEffect(() => {
-        updateTransactions();
+        rootStore.transactionStore.fetchTransactions();
     }, []);
 
+    const transactions = rootStore.transactionStore.transactions;
+
     const deleteTransaction: (id: string) => void = (id) => {
-        async function deleteRequest(id: string){
-            await transactionMicroservice.delete('deleteTransaction', {
-                data: {
-                    '_id': id
-                }
-            });
-            updateTransactions();
-        }
-        deleteRequest(id);
+        rootStore.transactionStore.deleteTransaction(id);
     }
 
     return (
@@ -54,35 +29,35 @@ export const TransactionsPage = ({isSignedIn}: ITransactionPageProps) => {
             <Header />
 
             <div style={{width: '10vw'}}>
-                <UpdateTransactionForm updateTransactions={updateTransactions} />
+                <UpdateTransactionForm />
             </div>
 
             {
-                transactionsDto.map((transactionDto) => (
+                transactions.map((transaction) => (
                     <Card
-                        border={transactionDto.input ? 'success' : 'danger'}
+                        border={transaction.input ? 'success' : 'danger'}
                         text='black'
-                        key={transactionDto._id}
+                        key={transaction._id}
                         style={{marginTop: '2vh'}}
                     >
                         <Card.Header>
-                            {`${transactionDto.input ? 'Income' : 'Outcome'} ${new Date(transactionDto.dateTime).toLocaleString('ru-Ru')}`}
+                            {`${transaction.input ? 'Income' : 'Outcome'} ${new Date(transaction.dateTime).toLocaleString('ru-Ru')}`}
                         </Card.Header>
                         <Card.Body>
-                            <Card.Title>{transactionDto.amount}</Card.Title>
+                            <Card.Title>{transaction.amount}</Card.Title>
                             <Card.Text>
                                 <div style={{display: 'flex', gap: 16, width: '100%'}}>
                                     <div style={{width: '90%'}}>
-                                        {transactionDto.comment}
+                                        {transaction.comment}
                                     </div>
                                     <div style={{width: '10%', display: 'flex', gap: 8}}>
-                                        <UpdateTransactionForm transactionDto={transactionDto} updateTransactions={updateTransactions} />
+                                        <UpdateTransactionForm transaction={transaction} />
                                         <ConfirmationDialog 
                                             showText='Delete'
                                             btnAcceptText='Delete'
                                             btnDeclineText='Cancel'
                                             question='Are you shure you want to delete transaction?'
-                                            action={() => deleteTransaction(transactionDto._id!)}
+                                            action={() => deleteTransaction(transaction._id!)}
                                         />
                                     </div>
                                 </div>
@@ -93,4 +68,4 @@ export const TransactionsPage = ({isSignedIn}: ITransactionPageProps) => {
             }
         </div>
     )
-}
+})

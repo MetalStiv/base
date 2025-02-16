@@ -4,12 +4,7 @@ import style from './styles.module.css';
 import { LoginForm } from "./login-form/login-form";
 import { RegisterForm } from "./register-form/register-form";
 
-export interface IStartPageProps {
-    setIsSignedIn: (isSignedIn: boolean) => void
-}
-
-export const StartPage = ({setIsSignedIn}: IStartPageProps) => {
-
+export const StartPage = () => {
     return (
         <Container fluid className={style.container}>
             <Row>
@@ -19,7 +14,7 @@ export const StartPage = ({setIsSignedIn}: IStartPageProps) => {
                     fill
                 >
                     <Tab eventKey="login" title="Login">
-                        <LoginForm setIsSignedIn={setIsSignedIn} />
+                        <LoginForm />
                     </Tab>
                     <Tab eventKey="register" title="Register">
                         <RegisterForm />

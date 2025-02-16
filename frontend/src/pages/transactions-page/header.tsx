@@ -1,11 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { logout } from "../../helpers/login";
+import { observer } from "mobx-react-lite";
+import { rootStore } from "../../stores/root-store";
 
-export const Header = () => {
+export const Header = observer(() => {
     const navigate = useNavigate();
     
     const signOut = () => {
-        logout();
+        logout(() => rootStore.userStore.setLoginStatus(false));
         navigate('/');
     }
 
@@ -17,4 +19,4 @@ export const Header = () => {
             <div onClick={signOut}>SignOut</div>
         </div>
     )
-}
+})

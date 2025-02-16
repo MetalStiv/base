@@ -5,7 +5,7 @@ import { ILoginDto } from '../../../shared/types/dto/login-dto';
 import { ITokenDto } from '../../../shared/types/dto/token-dto';
 import jwt_decode from "jwt-decode";
 
-export const login = async (params: ILoginDto): Promise<IJwtData> => {
+export const login = async (params: ILoginDto, loginHandler: () => void): Promise<IJwtData> => {
   const response = await userCleanMicroservice.post<ITokenDto>('login', params);
   if (response.status !== 200){
     throw response.status;
@@ -16,6 +16,8 @@ export const login = async (params: ILoginDto): Promise<IJwtData> => {
     refreshToken: response.data.refresh
   })
 
+  loginHandler()
+
   return jwt_decode(response.data.access);;
 }
 
@@ -24,6 +26,7 @@ export const getUserId = async () => {
   return decoded.id;
 }
 
-export const logout = () => {
+export const logout = (logoutHandler: () => void) => {
   clearAuthTokens();
+  logoutHandler();
 }

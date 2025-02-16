@@ -6,12 +6,10 @@ import { loginFormScheme } from "../../../constants/form-validations-schemes";
 import { login } from "../../../helpers/login";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { observer } from "mobx-react-lite";
+import { rootStore } from "../../../stores/root-store";
 
-export interface ILoginFormProps {
-    setIsSignedIn: (isSignedIn: boolean) => void
-}
-
-export const LoginForm = ({setIsSignedIn}: ILoginFormProps) => {
+export const LoginForm = observer(() => {
     const navigate = useNavigate();
     const [isInvalidUserError, setIsInvalidUserError] = useState(false);
     const [isPasswordError, setIsPasswordError] = useState(false);
@@ -25,8 +23,8 @@ export const LoginForm = ({setIsSignedIn}: ILoginFormProps) => {
             setIsInvalidUserError(false);
             setIsPasswordError(false);
             try{
-                await login(values);
-                setIsSignedIn(true);
+                await login(values, () => rootStore.userStore.setLoginStatus(true));
+                
                 navigate('/home');
             }
             catch(errorCode){
@@ -102,4 +100,4 @@ export const LoginForm = ({setIsSignedIn}: ILoginFormProps) => {
             <Button onClick={form.submitForm} style={{width: '100%', marginTop: '2vh'}}>SignIn</Button>
         </Form>
     )
-}
+})

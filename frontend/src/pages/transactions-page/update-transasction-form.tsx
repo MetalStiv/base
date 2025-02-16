@@ -5,33 +5,33 @@ import { useFormik } from "formik";
 import { updateTransactionFormScheme } from "../../constants/form-validations-schemes";
 import style from './styles.module.css';
 import { transactionMicroservice } from "../../constants/axios-microservices";
+import { observer } from "mobx-react-lite";
+import { rootStore } from "../../stores/root-store";
 
 export interface IUpdateTransactionFormProps {
-    transactionDto?: ITransactionDto;
-    updateTransactions: () => void;
+    transaction?: ITransactionDto;
 }
 
-export const UpdateTransactionForm = ({transactionDto, updateTransactions}: IUpdateTransactionFormProps) => {
+export const UpdateTransactionForm = observer(({transaction}: IUpdateTransactionFormProps) => {
     const [show, setShow] = useState(false);
 
     const handleClose = () => setShow(false);
 
     const form = useFormik({
         initialValues: {
-            input: transactionDto ? transactionDto.input : true,
-            amount: transactionDto ? transactionDto.amount : 0,
-            dateTime: transactionDto ? transactionDto.dateTime : Date.now(),
-            comment: transactionDto ? transactionDto.comment : '' 
+            input: transaction ? transaction.input : true,
+            amount: transaction ? transaction.amount : 0,
+            dateTime: transaction ? transaction.dateTime : Date.now(),
+            comment: transaction ? transaction.comment : '' 
         },
         onSubmit: async (values) => {
             try{
-                if (transactionDto){
-                    await transactionMicroservice.post('updateTransaction', {...values, _id: transactionDto._id});
+                if (transaction){
+                    await rootStore.transactionStore.updateTransaction({...values, _id: transaction._id});
                 }
                 else {
-                    await transactionMicroservice.post('addTransaction', values);
+                    await rootStore.transactionStore.addTransaction(values);
                 }
-                updateTransactions();
                 setShow(false);
             }
             catch(errorCode){
@@ -43,8 +43,8 @@ export const UpdateTransactionForm = ({transactionDto, updateTransactions}: IUpd
 
     return (
         <>
-            <Button style={{width: '100%'}} variant={transactionDto ? 'warning' : 'outline-primary'} onClick={() => setShow(true)}>
-                {!transactionDto ? '+' : 'Modify'}
+            <Button style={{width: '100%'}} variant={transaction ? 'warning' : 'outline-primary'} onClick={() => setShow(true)}>
+                {!transaction ? '+' : 'Modify'}
             </Button>
 
             <Modal
@@ -54,7 +54,7 @@ export const UpdateTransactionForm = ({transactionDto, updateTransactions}: IUpd
                 keyboard={false}
             >
                 <Modal.Header closeButton>
-                    <Modal.Title>{transactionDto ? 'Update transaction' : 'Add new transaction'}</Modal.Title>
+                    <Modal.Title>{transaction ? 'Update transaction' : 'Add new transaction'}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
 
@@ -181,4 +181,4 @@ export const UpdateTransactionForm = ({transactionDto, updateTransactions}: IUpd
             </Modal>
         </>
     )
-} 
+})
