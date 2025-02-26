@@ -4,7 +4,7 @@ interface ApiConfig {
 }
 
 const transactionApi: ApiConfig = {
-    base: 'http://localhost:3016/',
+    base: 'http://178.208.72.167:3016/',
     routes: {
         getTransactions: 'getTransactions',
         postTransaction: 'postTransaction',
@@ -13,7 +13,7 @@ const transactionApi: ApiConfig = {
 }
 
 const userApi: ApiConfig = {
-    base: 'http://localhost:3015/',
+    base: 'http://178.208.72.167:3015/',
     routes: {
         register: 'register',
         login: 'login',
